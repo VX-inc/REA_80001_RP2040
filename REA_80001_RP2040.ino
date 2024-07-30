@@ -1,8 +1,12 @@
 #include <Adafruit_NeoPixel.h>
 #include <ACAN2040.h>
+#include <Wire.h>
+#include "Adafruit_HUSB238.h"
 
 #define LED_STATUS_PIN 9
 #define LED_STATUS_ADDRESS 0
+#define I2C_SDA_PIN 0
+#define I2C_SCL_PIN 1
 #define PSU_CONNECT_OUTPUT_PIN 2
 #define PSU_STANDBY_PIN 3
 #define PSU_EN_12V_PIN 4
@@ -10,6 +14,8 @@
 
 #define CAN_STUFFING_FRAME 0xAA
 #define CAN_IDENTIFIER 0x0A
+
+#define WIRE Wire
 
 const uint8_t PIONUM0 = 0;
 const uint8_t TXPIN0 = 7;
@@ -49,6 +55,8 @@ void setup() {
   powerStateMachineCommand(PSU_POWER_OFF);
   initializeStatusLED();
   can2040.begin();
+  initI2C();
+  initalize_USB_PD();
 }
 
 

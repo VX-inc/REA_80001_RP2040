@@ -9,6 +9,8 @@ void initializePSUPins() {
   digitalWrite(PSU_EN_12V_PIN, LOW);
 }
 
+
+
 void powerStateMachineCommand(PSUState commandedState) {
   psuState = commandedState;
 
@@ -54,7 +56,7 @@ void initializeStatusLED() {
   status_led.begin();
   status_led.clear();
   status_led.setPixelColor(LED_STATUS_ADDRESS, status_led.Color(10, 10, 10));
-  while(!status_led.canShow()){}
+  while (!status_led.canShow()) {}
   status_led.show();
 }
 
@@ -71,7 +73,7 @@ void updateStatusLED(PSUState commandedSupplyState) {
   if (commandedSupplyState == PSU_5V) {
     status_led.setPixelColor(LED_STATUS_ADDRESS, status_led.Color(0, 10, 0));
   }
-  while(!status_led.canShow()){}
+  while (!status_led.canShow()) {}
   status_led.show();
 }
 
@@ -133,9 +135,27 @@ void serialParser() {
       Serial.println("Starting/Stopping Test Pattern");
       validCommand = true;
     }
+    if (strcmp(inputString, "scan") == 0) {
+      runI2CScanner();
+      validCommand = true;
+    }
+    if (strcmp(inputString, "psu") == 0) {
+      readAndDisplayPSU();
+      validCommand = true;
+    }
+    if (strcmp(inputString, "volt") == 0) {
+      readInputVoltage();
+      validCommand = true;
+    }
+    if (strcmp(inputString, "pd") == 0) {
+      USB_PD_Print();
+      validCommand = true;
+    }
+
 
     if (validCommand == false) {
       Serial.println("Invalid Command");
+      printCommands();
     }
 
     memset(inputString, 0, sizeof(inputString));
@@ -170,6 +190,10 @@ void printCommands() {
   Serial.println("12V : Turn on 12V LED Power");
   Serial.println("5V : Turn on 5V LED Power");
   Serial.println("t : Run/Stop Test Pattern on LED Strip (power must be enabled first)");
+  Serial.println("scan : Run I2C Scanner");
+  Serial.println("psu : Read and print all PSU Registers");
+  Serial.println("volt : Read input voltage to PSU");
+  Serial.println("pd : print the USB-C PD Profile");
 }
 
 void checkCANMessages() {
