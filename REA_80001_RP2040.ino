@@ -11,6 +11,7 @@
 #define PSU_STANDBY_PIN 3
 #define PSU_EN_12V_PIN 4
 #define CONNECT_INPUT_PIN 5
+#define DEVICE_TYPE_PIN 18
 
 #define CAN_STUFFING_FRAME 0xAA
 #define CAN_IDENTIFIER 0x0A
@@ -38,10 +39,24 @@ enum PSUState {
   PSU_5V = 4
 };
 
+enum PSUStatus {
+  PSU_OK = 0,
+  PSU_OVER_CURRENT = 1
+};
 
 enum CANDataType {
   CAN_PSU_VOLTAGE = 1,
-  CAN_TEST_PATTERN = 2
+  CAN_TEST_PATTERN = 2,
+  CAN_CURRENT_REQUEST = 3,
+  CAN_CURRENT_ZERO_REQUEST = 4,
+  CAN_CURRENT_DATA = 5,
+  CAN_PSU_STATUS = 6
+};
+
+enum DeviceType {
+  DEVICE_UNKNOWN = 0,
+  DEVICE_ATTACHED_PSU = 1,
+  DEVICE_STANDALONE_PSU = 2
 };
 
 PSUState psuState = PSU_POWER_OFF;
@@ -49,18 +64,35 @@ PSUState psuState = PSU_POWER_OFF;
 Adafruit_NeoPixel status_led = Adafruit_NeoPixel(1, LED_STATUS_PIN, NEO_GRB + NEO_KHZ800);
 
 void setup() {
-  delay(2000);
+  delay(100);
   initializeSerial();
-  initializePSUPins();
-  powerStateMachineCommand(PSU_POWER_OFF);
-  initializeStatusLED();
+  checkDeviceType();
   can2040.begin();
   initI2C();
   initalize_USB_PD();
+  initCurrentSense();
+  initializeStatusLED();
+  initializePSUPins();
+  powerStateMachineCommand(PSU_POWER_OFF);
 }
 
 
 void loop() {
+  slottedLoop();
+}
+
+
+//Functions that run once every 100ms
+void Slot_100ms() {
+  refreshStatusLED();
+}
+
+//Functions that run once every 10ms
+void Slot_10ms() {
   checkCANMessages();
   serialParser();
+}
+
+//Functions that run once every loop (the fastest possible)
+void Slot_EveryLoop() {
 }
